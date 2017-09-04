@@ -340,6 +340,23 @@ class FixAssertBase(fixer_base.BaseFix):
             number, return from_node[indices_path]; else returns according to sequence of children indices
 
         Example: if indices_path is (1, 2, 3), will return from_node.children[1].children[2].children[3].
+
+        from nose2pytest.script import NoseConversionRefactoringTool
+        refac = NoseConversionRefactoringTool()
+        refac.refactor_string( 'def parrot(): pass\n\n', 'script')
+
+         _get_node(None, xx, 0)
+         Node(funcdef, [Leaf(1, 'def'), Leaf(1, 'parrot'), Node(parameters, [Leaf(7, '('), Leaf(8, ')')]), Leaf(11, ':'), Node(simple_stmt, [Leaf(1, 'pass'), Leaf(4, '\n')])])
+
+         _get_node(None, xx, (0,2))
+         Node(parameters, [Leaf(7, '('), Leaf(8, ')')])
+
+         _get_node(None, xx, (0,4))
+         Node(simple_stmt, [Leaf(1, 'pass'), Leaf(4, '\n')])
+
+         _get_node(None, xx, (0,4,0))
+         Leaf(1, 'pass')
+
         """
         if indices_path is None:
             return from_node
@@ -504,14 +521,23 @@ class FixAssertAlmostEq(FixAssertBase):
 
     # The args node paths are the same for every assert function: the first tuple is for
     # arg a, the second for arg b, the third for arg c (delta).
+    # DEFAULT_ARG_PATHS = ((0, 1, 1, 0), (0, 1, 1, 2), 2)
     DEFAULT_ARG_PATHS = ((0, 1, 1, 0), (0, 1, 1, 2), 2)
+    # DEFAULT_ARG_PATHS = (0, 2)
+    # (1,1,4,2)
 
     conversions = dict(
-        assert_almost_equal='a == pytest.approx(b, abs=delta)',
-        assert_almost_equals='a == pytest.approx(b, abs=delta)',
-        assert_not_almost_equal='a != pytest.approx(b, abs=delta)',
-        assert_not_almost_equals='a != pytest.approx(b, abs=delta)',
+        assert_almost_equal='a - b <= delta',
+        assert_almost_equals='abs(a - b) <= delta',
+        assert_not_almost_equal='abs(a - b) > delta',
+        assert_not_almost_equals='abs(a - b) > delta',
     )
+    # conversions = dict(
+    #     assert_almost_equal='a == approx(b)',
+    #     assert_almost_equals='a == pytest.approx(b, abs=delta)',
+    #     assert_not_almost_equal='a != pytest.approx(b, abs=delta)',
+    #     assert_not_almost_equals='a != pytest.approx(b, abs=delta)',
+    # )
 
     @override(FixAssertBase)
     def _transform_dest(self, assert_arg_test_node: PyNode, results: {str: PyNode}) -> bool:
